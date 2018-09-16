@@ -3,6 +3,7 @@ import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import org.apache.http.ConnectionClosedException;
 
 import java.io.*;
 import java.net.URI;
@@ -13,15 +14,13 @@ import java.util.Map;
 
 class JenkinsManager {
     private static final String ARTIFACT_FILTER = "MyOffice\\S+";
-    private String hostName;
     private JenkinsServer jenkinsServer;
     private Map<String, Job> serverJobMap;
     private URI uri;
 
     JenkinsManager(String host){
-        this.hostName = host;
         try {
-            uri = new URI(hostName);
+            uri = new URI(host);
         } catch (URISyntaxException e){
             e.printStackTrace();
             System.exit(-1);
@@ -43,7 +42,7 @@ class JenkinsManager {
         return getJobList("");
     }
 
-    public List<Job> getJobList(String regexFilter){
+    List<Job> getJobList(String regexFilter){
         List<Job> jobList = new ArrayList<>();
         for (Map.Entry<String, Job> element : serverJobMap.entrySet()){
             Job job = element.getValue();
@@ -54,11 +53,11 @@ class JenkinsManager {
         return jobList;
     }
 
-    public void downloadTargetArtifact(String jobName){
+    void downloadTargetArtifact(String jobName){
         downloadTargetArtifact(jobName, 0);
     }
 
-    public void downloadTargetArtifact(String jobName, Integer buildNumber) {
+    void downloadTargetArtifact(String jobName, Integer buildNumber) {
         try {
             if (serverJobMap.containsKey(jobName)) {
                 JobWithDetails job = jenkinsServer.getJob(jobName).details();
@@ -79,13 +78,18 @@ class JenkinsManager {
                             System.out.println("Start downloading");
                             InputStream inputStream = build.downloadArtifact(artifact);
                             OutputStream outputStream =
-                                    new FileOutputStream(new File("F:/"+artifactName));
+                                    new FileOutputStream(new File("./"+artifactName));
                             int read;
                             byte[] bytes = new byte[1024];
-                            while ((read = inputStream.read(bytes)) != -1) {
-                                outputStream.write(bytes, 0, read);
+                            try {
+                                while ((read = inputStream.read(bytes)) != -1) {
+                                    outputStream.write(bytes, 0, read);
+                                }
+                            } catch (ConnectionClosedException e){
+                                System.out.println(e.getMessage());
+                                System.exit(-1);
                             }
-                            System.out.println("Artifact downloaded. Find it at F:/" + artifactName);
+                            System.out.println("Artifact downloaded. Find it at ./" + artifactName);
                         } catch (URISyntaxException e) {
                             System.out.println("Artifact downloading is failed");
                             e.printStackTrace();
