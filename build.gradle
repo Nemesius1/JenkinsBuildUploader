@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+}
+
+group 'JenkinsBuildUploader'
+version '0.1'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/com.offbytwo.jenkins/jenkins-client
+    compile group: 'com.offbytwo.jenkins', name: 'jenkins-client', version: '0.3.8'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
